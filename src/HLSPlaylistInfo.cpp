@@ -41,8 +41,9 @@ bool HLSPlaylistInfo::extractPlaylistInfo(string url) {
     if (url.empty()) {
         return false;
     }
-   
-    regex urlregex("https?:\\/\\/.+\\/.+"); // Basic http path matching 
+    
+    //regex urlregex("https?:\\/\\/.+(\\/.+)*\\/*.m3u8");
+    regex urlregex("https?:\\/\\/([a-z0-9-_.]+\\/)+[a-z0-9-_]*\\.m3u8"); // Basic http path matching; ensure link is ended with a playlist name
     if (!regex_match(url, urlregex)) {
         return false;
     }

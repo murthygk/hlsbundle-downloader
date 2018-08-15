@@ -68,7 +68,7 @@ bool HLSPlaylistUtilities::fetchAndvalidateUserInput(string *destinationPath, HL
         cin >> dirPath;
         
         if (!playlistInfo->extractPlaylistInfo(urlPath)) {
-            cout << "ERROR : "  << urlPath << "is invalid/corrupted. Provide new url name" << endl;
+            cout << "ERROR : "  << urlPath << " is an invalid/corrupted url. Provide new url name" << endl;
             if (checkForContinuity()) {
                 continue;
             }
@@ -96,13 +96,14 @@ bool HLSPlaylistUtilities::fetchAndvalidateUserInput(string *destinationPath, HL
 }
 
 bool checkForContinuity() {
-    cout << "Press any key to continue or `e/E` for exit the downloader : " << endl;
+    cout << "Press any key + ENTER to continue or `e/E + ENTER` for exit the downloader : " << endl;
     char c;
-    cin >> c;
+    cin >> c; 
     
     if ((c == 'e') || (c == 'E')) {
         return false;
     }
     
+    cin.clear();
     return true;
 }

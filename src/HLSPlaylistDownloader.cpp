@@ -104,7 +104,7 @@ void HLSPlaylistDownloader::downloadIndividualPlaylist(string baseUrlPath, strin
                 // sequence files are binary hence open input file in binary mode
                 m_hlsstream = ofstream(localDownloadSequenceName, ios::out | ios::app | ios::binary);
                 downloadItem(m_url.c_str());
-                cout << ".";
+                cout << "." << flush;
             }
             cout << " " << playlistStreams.size() << " sequences downloaded" << endl;
         }
