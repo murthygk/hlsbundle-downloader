@@ -5,10 +5,9 @@
 #include <fstream>
 #include <vector>
 
-#include <curl/curl.h>
-
-
 using namespace std;
+
+#include <curl/curl.h>
 
 const string playlistUrl = "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8";
 
