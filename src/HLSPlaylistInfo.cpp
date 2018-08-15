@@ -15,11 +15,15 @@ HLSPlaylistInfo::HLSPlaylistInfo(const string url) {
 HLSPlaylistInfo::~HLSPlaylistInfo() {
 }
 
-string HLSPlaylistInfo::getMainPlaylistName() {
+string HLSPlaylistInfo:: getPlaylistRootName() {
+    return playlistRootName;
+}
+
+string HLSPlaylistInfo:: getMainPlaylistName() {
     return mainPlaylistName;
 }
 
-string HLSPlaylistInfo::getBaseUrlPath() {
+string HLSPlaylistInfo:: getBaseUrlPath() {
     return baseUrlPath;
 }
 
@@ -35,6 +39,7 @@ void HLSPlaylistInfo::extractPlaylistInfo() {
     
     protocolIdentifier = urlItems[1];
     host = urlItems[2];
+    playlistRootName = urlItems[urlItems.size() - 2];
     mainPlaylistName = urlItems[urlItems.size() - 1];
     
     // While downloading each playlist item the name of the list/item is appended to this baseUrlPath to form a valid url path for downloading

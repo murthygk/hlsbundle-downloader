@@ -1,8 +1,13 @@
+//
 //  HLSPlaylistDownloader.cpp
+//  HLSVoDBundleDownloader
 //
 //  Created by Krishna Gudipati on 8/14/18.
+//  Copyright © 2018 The Weather Channel. All rights reserved.
+//
 
 #include "HLSPlaylistDownloader.hpp"
+#include "HLSPlaylistUtilities.hpp"
 #include <curl/curl.h>
 #include <iostream>
 #include <vector>
@@ -15,18 +20,18 @@ HLSPlaylistDownloader::~HLSPlaylistDownloader() {
 
 
 void HLSPlaylistDownloader::setDownloadInfo(string urlPath, string outfile) {
-    url = urlPath;
-    outputFile = outfile;
+    m_url = urlPath;
+    m_outputFile = outfile;
 }
 
 bool HLSPlaylistDownloader:: downloadPlaylist() {
-    hlsstream = ofstream(outputFile, ios::out | ios::app);
-    return downloadItem(url.c_str());
+    m_hlsstream = ofstream(m_outputFile, ios::out | ios::app);
+    return downloadItem(m_url.c_str());
 }
 
 bool HLSPlaylistDownloader:: downloadStream() {
-    hlsstream = ofstream(outputFile, ios::out | ios::app | ios::binary);
-    return downloadItem(url.c_str());
+    m_hlsstream = ofstream(m_outputFile, ios::out | ios::app | ios::binary);
+    return downloadItem(m_url.c_str());
 }
 
 size_t HLSPlaylistDownloader::curlCallBack(void *curlData, size_t size, size_t receievedSize, void *writeToFileBuffer)
@@ -39,7 +44,7 @@ bool HLSPlaylistDownloader::downloadItem(const char* url) {
     
     bool success = false;
     
-    if (hlsstream.is_open()) {
+    if (m_hlsstream.is_open()) {
         
         CURL *curl;
         CURLcode result = CURL_LAST;
@@ -53,10 +58,10 @@ bool HLSPlaylistDownloader::downloadItem(const char* url) {
             result = curl_easy_perform(curl);
             curl_easy_cleanup(curl);
             
-            hlsstream << readBuffer << endl;
+            m_hlsstream << readBuffer << endl;
         }
         
-        hlsstream.close();
+        m_hlsstream.close();
         
         success = (result == 0);
     }
@@ -65,17 +70,11 @@ bool HLSPlaylistDownloader::downloadItem(const char* url) {
 }
 
 void HLSPlaylistDownloader::downloadIndividualPlaylist(string baseUrlPath, string playlistPath, string destination) {
+    
+    m_url = baseUrlPath + playlistPath;
+    
+    vector <string> nameItems = HLSPlaylistUtilities::tokenize(playlistPath, '/');
 
-    url = baseUrlPath + playlistPath;
-    
-    vector <string> nameItems;
-    stringstream urlStringStream(playlistPath);
-    string tmpItem;
-    
-    while(getline(urlStringStream, tmpItem, '/')) {
-        nameItems.push_back(tmpItem);
-    }
-    
     if (!(nameItems.size() > 0)) {
         return;
     }
@@ -89,37 +88,25 @@ void HLSPlaylistDownloader::downloadIndividualPlaylist(string baseUrlPath, strin
     
     status = system(createDirCommand.c_str());
     if (status != success){
-        cout << "ERROR : Not able to create directory : " << endl << playlistLocalPath << ". Provide new directory name" << endl;
+        cout << "ERROR : Not able to create directory : " << endl << playlistLocalPath << endl;
         return;
     }
     
     string localDownloadFileName = destination + "/" + playlistPath;
-    hlsstream = ofstream(localDownloadFileName, ios::out | ios::app);
-    if (downloadItem(url.c_str())) {
-        // download sequence files
-        ifstream playlistfile(localDownloadFileName, ios::in);
-        vector<string> playlistStreams;
+    m_hlsstream = ofstream(localDownloadFileName, ios::out | ios::app);
+    if (downloadItem(m_url.c_str())) {
+        // download streams
         
-        if (playlistfile.is_open()) {
-            string line;
-            while (!playlistfile.eof()) {
-                getline(playlistfile, line);
-                line.erase(0, line.find_first_not_of("\t\n\v\f\r "));
-                if (line.empty() || (line[0] == '#')) {
-                    continue;
-                }
-                playlistStreams.push_back(line);
-            }
-            playlistfile.close();
-        }
+        vector<string> playlistStreams = HLSPlaylistUtilities::buildList(localDownloadFileName);
         
         if (playlistStreams.size() > 0) {
             for (vector<string>::iterator sequence = playlistStreams.begin(); sequence != playlistStreams.end(); ++sequence) {
                 string localDownloadSequenceName = playlistLocalPath + "/" + *sequence;
-                url = baseUrlPath + playlistName + "/" + *sequence;
-                hlsstream = ofstream(localDownloadSequenceName, ios::out | ios::app | ios::binary);
-                downloadItem(url.c_str());
+                m_url = baseUrlPath + playlistName + "/" + *sequence;
+                m_hlsstream = ofstream(localDownloadSequenceName, ios::out | ios::app | ios::binary);
+                downloadItem(m_url.c_str());
             }
         }
-    } 
+    }
 }
+

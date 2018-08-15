@@ -22,11 +22,13 @@ class HLSPlaylistInfo {
     
         string protocolIdentifier;
         string host;
+        string playlistRootName;
         string mainPlaylistName;
     
         void extractPlaylistInfo();
     
     public:
+        string getPlaylistRootName();
         string getMainPlaylistName();
         string getBaseUrlPath();
 };
