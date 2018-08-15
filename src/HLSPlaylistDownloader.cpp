@@ -61,5 +61,5 @@ bool HLSPlaylistDownloader::downloadItem(const char* url) {
         success = (result == 0);
     }
     
-    return false;
+    return success;
 }

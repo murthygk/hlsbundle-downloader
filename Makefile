@@ -1,7 +1,7 @@
 CC=g++
 EXE=hlsdownloader
 
-S_SRC= src/main.cpp src/HLSPlaylistDownloader.cpp
+S_SRC= src/main.cpp src/HLSPlaylistDownloader.cpp src/HLSPlaylistInfo.cpp
 S_OBJS=	$(S_SRC:.cpp=.o)
 CFLAGS+= -I headers --std=c++11 --stdlib=libc++
 LDFLAGS+= -lcurl
