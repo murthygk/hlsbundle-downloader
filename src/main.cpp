@@ -96,6 +96,7 @@ int main(void)
     }
     
     playlistInfo = NULL;
+    hlsDownloader = NULL;
     
     return 0;
 }

@@ -54,7 +54,6 @@ bool HLSPlaylistDownloader::downloadItem(const char* url) {
             curl_easy_cleanup(curl);
             
             hlsstream << readBuffer << endl;
-            cout << readBuffer << endl;
         }
         
         hlsstream.close();
@@ -65,7 +64,8 @@ bool HLSPlaylistDownloader::downloadItem(const char* url) {
     return success;
 }
 
-bool HLSPlaylistDownloader::downloadIndividualPlaylist(string baseUrlPath, string playlistPath, string destination) {
+void HLSPlaylistDownloader::downloadIndividualPlaylist(string baseUrlPath, string playlistPath, string destination) {
+
     url = baseUrlPath + playlistPath;
     
     vector <string> nameItems;
@@ -77,7 +77,7 @@ bool HLSPlaylistDownloader::downloadIndividualPlaylist(string baseUrlPath, strin
     }
     
     if (!(nameItems.size() > 0)) {
-        return false;
+        return;
     }
     
     string playlistName = nameItems[0];
@@ -90,11 +90,36 @@ bool HLSPlaylistDownloader::downloadIndividualPlaylist(string baseUrlPath, strin
     status = system(createDirCommand.c_str());
     if (status != success){
         cout << "ERROR : Not able to create directory : " << endl << playlistLocalPath << ". Provide new directory name" << endl;
-        return false;
+        return;
     }
     
-    hlsstream = ofstream(destination + "/" + playlistPath, ios::out | ios::app);
-    return downloadItem(url.c_str());
-    
-    return false;
+    string localDownloadFileName = destination + "/" + playlistPath;
+    hlsstream = ofstream(localDownloadFileName, ios::out | ios::app);
+    if (downloadItem(url.c_str())) {
+        // download sequence files
+        ifstream playlistfile(localDownloadFileName, ios::in);
+        vector<string> playlistStreams;
+        
+        if (playlistfile.is_open()) {
+            string line;
+            while (!playlistfile.eof()) {
+                getline(playlistfile, line);
+                line.erase(0, line.find_first_not_of("\t\n\v\f\r "));
+                if (line.empty() || (line[0] == '#')) {
+                    continue;
+                }
+                playlistStreams.push_back(line);
+            }
+            playlistfile.close();
+        }
+        
+        if (playlistStreams.size() > 0) {
+            for (vector<string>::iterator sequence = playlistStreams.begin(); sequence != playlistStreams.end(); ++sequence) {
+                string localDownloadSequenceName = playlistLocalPath + "/" + *sequence;
+                url = baseUrlPath + playlistName + "/" + *sequence;
+                hlsstream = ofstream(localDownloadSequenceName, ios::out | ios::app | ios::binary);
+                downloadItem(url.c_str());
+            }
+        }
+    } 
 }
