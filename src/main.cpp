@@ -18,14 +18,11 @@ using namespace std;
 
 const string playlistRootUrl = "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8";
 
-ofstream hlsstream;
+int main(void) {
 
-int main(void)
-{
     HLSPlaylistInfo *playlistInfo = new HLSPlaylistInfo(playlistRootUrl);
     
-    // 0.1 Create bundle directory - UserProvided
-    // 0.2 Create plalist directory - bipbop_4x3_variant.m3u8
+    // 0. Create root directory - bipbop_4x3
     // 1. Download the root url and save it in this directory - bipbop_4x3_variant.m3u8
     // 2. Parse the file and make a list of items : gear0/prog_index.m3u8, gear1/prog_index.m3u8, gear2/prog_index.m3u8, gear3/prog_index.m3u8, gear4/prog_index.m3u8
     // 3. For each of the itemlist ()                 ^
@@ -63,10 +60,30 @@ int main(void)
     
     // 1 Download the root playlist file
     string localDownloadFileName = playListRootDirectory + "/" + playlistInfo->getMainPlaylistName();
-    // string completeUrlPath = playlistInfo->getBaseUrlPath() + playlistInfo->getMainPlaylistName();
     HLSPlaylistDownloader *hlsDownloader = new HLSPlaylistDownloader();
     hlsDownloader->setDownloadInfo(playlistRootUrl, localDownloadFileName);
+    
+    vector <string> playListItems;
+    
     if (hlsDownloader->downloadPlaylist()) {
+        // Build playlist items from the list
+        ifstream playlistfile(localDownloadFileName, ios::in);
+        
+        if (playlistfile.is_open()) {
+            string line;
+            while (!playlistfile.eof()) {
+                getline(playlistfile, line);
+                line.erase(0, line.find_first_not_of("\t\n\v\f\r "));
+                if (line.empty() || (line[0] == '#')) {
+                    continue;
+                }
+                playListItems.push_back(line);
+            }
+            playlistfile.close();
+        }
+    }
+    
+    if (playListItems.size() > 0) {
         
     }
     
