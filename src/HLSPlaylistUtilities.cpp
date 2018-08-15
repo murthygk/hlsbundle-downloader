@@ -1,14 +1,19 @@
 //  HLSPlaylistUtilities.cpp
-//
 //  Created by Krishna Gudipati on 8/15/18.
 
 #include "HLSPlaylistUtilities.hpp"
+
+#include <iostream>
+
+using namespace std;
+
+bool checkForContinuity();
 
 vector<string> HLSPlaylistUtilities::buildList(string infile) {
     
     vector<string> items;
     
-    // Build items from the file
+    // Build items list from the file
     ifstream playlistfile(infile, ios::in);
     
     if (playlistfile.is_open()) {
@@ -31,7 +36,6 @@ vector<string> HLSPlaylistUtilities::buildList(string infile) {
 vector<string> HLSPlaylistUtilities::tokenize(string path, char delimiter) {
     
     vector <string> tokens;
-    
     stringstream urlStringStream(path);
     string tmpItem;
     
@@ -40,4 +44,65 @@ vector<string> HLSPlaylistUtilities::tokenize(string path, char delimiter) {
     }
     
     return tokens;
+}
+
+bool HLSPlaylistUtilities::createDirectory(string path) {
+    string createDirCommand = "mkdir " + path;
+    return system(createDirCommand.c_str());
+}
+
+bool HLSPlaylistUtilities::fetchAndvalidateUserInput(string *destinationPath, HLSPlaylistInfo *playlistInfo) {
+    
+    cout << endl << "                 -----***** HLS Playlist Downloader *****-----                 " << endl;
+    cout << endl << "       Please provide hls URL and output directory to save the play list       " << endl << endl;
+    
+    string urlPath;
+    string dirPath;
+    
+    while (1) {
+        
+        cout << " Enter HLS Url : ";
+        cin >> urlPath;
+        
+        cout << " Enter output directory : ";
+        cin >> dirPath;
+        
+        if (!playlistInfo->extractPlaylistInfo(urlPath)) {
+            cout << "ERROR : "  << urlPath << "is invalid/corrupted. Provide new url name" << endl;
+            if (checkForContinuity()) {
+                continue;
+            }
+            
+            return false;
+        }
+        
+        // Actual play list root directory
+        string playListRootDirectory = dirPath + "/" + playlistInfo->getPlaylistRootName();
+        if (HLSPlaylistUtilities::createDirectory(playListRootDirectory) != 0){
+            cout << "ERROR : Not able to create directory : " << playListRootDirectory << ". Provide new directory name" << endl;
+            if (checkForContinuity()) {
+                continue;
+            }
+            
+            return false;
+        }
+        
+        *destinationPath = playListRootDirectory;
+        
+        cout << endl;
+        
+        return true;
+    }
+}
+
+bool checkForContinuity() {
+    cout << "Press any key to continue or `e/E` for exit the downloader : " << endl;
+    char c;
+    cin >> c;
+    
+    if ((c == 'e') || (c == 'E')) {
+        return false;
+    }
+    
+    return true;
 }

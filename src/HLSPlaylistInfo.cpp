@@ -1,47 +1,69 @@
 //  HLSPlaylistInfo.cpp
-//
 //  Created by Krishna Gudipati on 8/14/18.
 
 #include "HLSPlaylistInfo.hpp"
+#include "HLSPlaylistUtilities.hpp"
+
 #include <regex>
 
 using namespace std;
 
-HLSPlaylistInfo::HLSPlaylistInfo(const string url) {
-    completePlaylistUrlPath = url;
-    extractPlaylistInfo();
+HLSPlaylistInfo::HLSPlaylistInfo(string url) {
+    m_completePlaylistUrlPath = url;
+}
+
+HLSPlaylistInfo::HLSPlaylistInfo() {
 }
 
 HLSPlaylistInfo::~HLSPlaylistInfo() {
 }
 
+string HLSPlaylistInfo:: getCompleteUrlPath() {
+    return m_completePlaylistUrlPath;
+}
+
 string HLSPlaylistInfo:: getPlaylistRootName() {
-    return playlistRootName;
+    return m_playlistRootName;
 }
 
 string HLSPlaylistInfo:: getMainPlaylistName() {
-    return mainPlaylistName;
+    return m_mainPlaylistName;
 }
 
 string HLSPlaylistInfo:: getBaseUrlPath() {
-    return baseUrlPath;
+    return m_baseUrlPath;
 }
 
-void HLSPlaylistInfo::extractPlaylistInfo() {
+bool HLSPlaylistInfo::extractPlaylistInfo(string url) {
+    // This method tokenizes the url and stores individual parts like play list name, the root directory name where all the downloads should be saved
+    // Eg. https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8
     
-    vector <string> urlItems;
-    stringstream urlStringStream(completePlaylistUrlPath);
-    string tmpItem;
-    
-    while(getline(urlStringStream, tmpItem, '/')) {
-        urlItems.push_back(tmpItem);
+    if (url.empty()) {
+        return false;
+    }
+   
+    regex urlregex("https?:\\/\\/.+\\/.+"); // Basic http path matching 
+    if (!regex_match(url, urlregex)) {
+        return false;
     }
     
-    protocolIdentifier = urlItems[1];
-    host = urlItems[2];
-    playlistRootName = urlItems[urlItems.size() - 2];
-    mainPlaylistName = urlItems[urlItems.size() - 1];
+    vector <string> urlItems = HLSPlaylistUtilities::tokenize(url, '/');
     
-    // While downloading each playlist item the name of the list/item is appended to this baseUrlPath to form a valid url path for downloading
-    baseUrlPath = regex_replace(completePlaylistUrlPath, regex(mainPlaylistName), "");
+    // Minimum items in the url - http, empty string (//),host, playlist name
+    if (urlItems.size() < 4) {
+        return false;
+    }
+    
+    m_completePlaylistUrlPath = url;
+    
+    m_protocolIdentifier = urlItems[0];                 // https
+    m_host = urlItems[2];                               // devstreaming-cdn.apple.com
+    m_playlistRootName = urlItems[urlItems.size() - 2]; // bipbop_4x3 - The directory under user specified directory
+    m_mainPlaylistName = urlItems[urlItems.size() - 1]; // bipbop_4x3_variant.m3u8 - The first play list index file downloaded
+    
+    // Every download should start from this URL path
+    // https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/
+    m_baseUrlPath = regex_replace(url, regex(m_mainPlaylistName), "");
+    
+    return true;
 }

@@ -1,5 +1,4 @@
 //  main.cpp
-//
 //  Created by Krishna Gudipati on 8/14/18.
 
 #include <iostream>
@@ -15,65 +14,44 @@
 
 using namespace std;
 
-const string playlistRootUrl = "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8";
+// const string playlistRootUrl = "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8";
 
 int main(void)
 {
-    HLSPlaylistInfo *playlistInfo = new HLSPlaylistInfo(playlistRootUrl);
+    HLSPlaylistInfo *playlistInfo = new HLSPlaylistInfo();
+    string playListRootDirectory;
     
-    // 0. Create root directory - bipbop_4x3
-    // 1. Download the root url and save it in this directory - bipbop_4x3_variant.m3u8
-    // 2. Parse the file and make a list of items : gear0/prog_index.m3u8, gear1/prog_index.m3u8, gear2/prog_index.m3u8, gear3/prog_index.m3u8, gear4/prog_index.m3u8
-    // 3. For each of the itemlist ()                 ^
-    // 3.1 Create a directory - gear0
-    //    3.1 Concatenate baseUrlPath + item : {baseUrl}/gear0/prog_index.m3u8
-    //    3.2 Dowload the file and save it in this directory
-    //    3.3 Parse the file and make a list of streams : fileSequence52.aac, fileSequence53.aac ....
-    //    3.2.1 For each of the stream list
-    //    3.2.1.1 Download each stream and save in this directory
-    //    3.2.1 ForEnd
-    // 3. ForEnd
-    
-    
-    int status;
-    int success = 0;
-    
-    // 0 - fetch output directory name from user
-    string localBundleDir = "UserProvidedDirectoryName"; // playlistInfo->getMainPlaylistName();
-    string createDirCommand = "mkdir " + localBundleDir;
-    
-    status = system(createDirCommand.c_str());
-    if (status != success){
-        cout << "ERROR : Not able to create directory : " << endl << localBundleDir << ". Provide new directory name" << endl;
-        exit(1);
+    // Prompt user to feed play list URL and directory path where to store the play list locally
+    if (!HLSPlaylistUtilities::fetchAndvalidateUserInput(&playListRootDirectory, playlistInfo)) {
+        // User choose to exit with out providing inputs
+        return 0;
     }
     
-    // Actual play list root directory
-    string playListRootDirectory = localBundleDir + "/" + playlistInfo->getPlaylistRootName();
-    createDirCommand = "mkdir " + playListRootDirectory;
-    status = system(createDirCommand.c_str());
-    if (status != success){
-        cout << "ERROR : Not able to create directory : " << endl << playListRootDirectory << ". Provide new directory name" << endl;
-        exit(1);
-    }
-    
-    // 1 Download the root playlist file
+    // The directory where actually downloading starts.
     string localDownloadFileName = playListRootDirectory + "/" + playlistInfo->getMainPlaylistName();
+    
     HLSPlaylistDownloader *hlsDownloader = new HLSPlaylistDownloader();
-    hlsDownloader->setDownloadInfo(playlistRootUrl, localDownloadFileName);
+    
+    // First file is the root play list (index) - eg. bipbop_4x3_variant.m3u8
+    // Supply the downloader the complete URL and the local directory where index file should be saved
+    hlsDownloader->setDownloadInfo(playlistInfo->getCompleteUrlPath(), localDownloadFileName);
     
     vector <string> playListItems;
     
     if (hlsDownloader->downloadPlaylist()) {
-        // Build playlist items from the list
+        // The root play list is successfully downloaded. Now parse that file and make a list of sub play lists
         playListItems = HLSPlaylistUtilities::buildList(localDownloadFileName);
     }
     
     if (playListItems.size() > 0) {
+        // Browse thru each of those play lists and download the index files
         for (vector<string>::iterator item = playListItems.begin(); item != playListItems.end(); ++item) {
+            // Download inde file and as well as the filesequences mentioned in the index file
             hlsDownloader->downloadIndividualPlaylist(playlistInfo->getBaseUrlPath(), *item, playListRootDirectory);
         }
     }
+    
+    cout << endl << "                -----***** Playlist Download COMPLETED *****-----               " << endl;
     
     playlistInfo = NULL;
     hlsDownloader = NULL;
