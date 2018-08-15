@@ -1,3 +1,7 @@
+//  main.cpp
+//
+//  Created by Krishna Gudipati on 8/14/18.
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -18,8 +22,10 @@ using namespace std;
 
 const string playlistRootUrl = "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8";
 
-int main(void) {
+ofstream hlsstream;
 
+int main(void)
+{
     HLSPlaylistInfo *playlistInfo = new HLSPlaylistInfo(playlistRootUrl);
     
     // 0. Create root directory - bipbop_4x3
@@ -84,10 +90,13 @@ int main(void) {
     }
     
     if (playListItems.size() > 0) {
-        
+        for (vector<string>::iterator it = playListItems.begin(); it!=playListItems.end(); ++it) {
+            hlsDownloader->downloadIndividualPlaylist(playlistInfo->getBaseUrlPath(), *it, playListRootDirectory);
+        }
     }
     
     playlistInfo = NULL;
     
     return 0;
 }
+

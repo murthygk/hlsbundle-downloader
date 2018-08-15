@@ -5,13 +5,14 @@
 #include "HLSPlaylistDownloader.hpp"
 #include <curl/curl.h>
 #include <iostream>
-#include <fstream>
+#include <vector>
 
 HLSPlaylistDownloader::HLSPlaylistDownloader() {
 }
 
 HLSPlaylistDownloader::~HLSPlaylistDownloader() {
 }
+
 
 void HLSPlaylistDownloader::setDownloadInfo(string urlPath, string outfile) {
     url = urlPath;
@@ -53,7 +54,7 @@ bool HLSPlaylistDownloader::downloadItem(const char* url) {
             curl_easy_cleanup(curl);
             
             hlsstream << readBuffer << endl;
-            //std::cout << readBuffer << endl;
+            cout << readBuffer << endl;
         }
         
         hlsstream.close();
@@ -62,4 +63,38 @@ bool HLSPlaylistDownloader::downloadItem(const char* url) {
     }
     
     return success;
+}
+
+bool HLSPlaylistDownloader::downloadIndividualPlaylist(string baseUrlPath, string playlistPath, string destination) {
+    url = baseUrlPath + playlistPath;
+    
+    vector <string> nameItems;
+    stringstream urlStringStream(playlistPath);
+    string tmpItem;
+    
+    while(getline(urlStringStream, tmpItem, '/')) {
+        nameItems.push_back(tmpItem);
+    }
+    
+    if (!(nameItems.size() > 0)) {
+        return false;
+    }
+    
+    string playlistName = nameItems[0];
+    string playlistLocalPath = destination + "/" + playlistName;
+    int status;
+    int success = 0;
+    
+    string createDirCommand = "mkdir " + playlistLocalPath;
+    
+    status = system(createDirCommand.c_str());
+    if (status != success){
+        cout << "ERROR : Not able to create directory : " << endl << playlistLocalPath << ". Provide new directory name" << endl;
+        return false;
+    }
+    
+    hlsstream = ofstream(destination + "/" + playlistPath, ios::out | ios::app);
+    return downloadItem(url.c_str());
+    
+    return false;
 }

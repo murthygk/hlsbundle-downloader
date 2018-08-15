@@ -29,7 +29,7 @@ class HLSPlaylistDownloader {
         void setDownloadInfo(string urlPath, string outfile);
         bool downloadPlaylist();
         bool downloadStream();
+        bool downloadIndividualPlaylist(string baseUrlPath, string playlistName, string destination);
 };
 
 #endif /* HLSPlaylistDownloader_hpp */
-
