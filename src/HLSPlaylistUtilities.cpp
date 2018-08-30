@@ -4,6 +4,7 @@
 #include "HLSPlaylistUtilities.hpp"
 
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -46,9 +47,24 @@ vector<string> HLSPlaylistUtilities::tokenize(string path, char delimiter) {
     return tokens;
 }
 
-bool HLSPlaylistUtilities::createDirectory(string path) {
+unsigned int HLSPlaylistUtilities::createDirectory(string path) {
     string createDirCommand = "mkdir " + path;
-    return system(createDirCommand.c_str());
+	
+	int success = 0, failure = 1;
+
+	if (system((createDirCommand + ">nul 2>&1").c_str()) == success) {
+		return success;
+	}
+	
+	// Try comand for different filesystem
+	string alternateCommand = createDirCommand;
+	replace(alternateCommand.begin(), alternateCommand.end(), '/', '\\');
+
+	if (system(alternateCommand.c_str()) == success) {
+		return success;
+	}
+
+	return failure;
 }
 
 bool HLSPlaylistUtilities::fetchAndvalidateUserInput(string *destinationPath, HLSPlaylistInfo *playlistInfo) {
@@ -96,14 +112,14 @@ bool HLSPlaylistUtilities::fetchAndvalidateUserInput(string *destinationPath, HL
 }
 
 bool checkForContinuity() {
-    cout << "Press any key + ENTER to continue or `e/E + ENTER` for exit the downloader : " << endl;
-    char c;
-    cin >> c; 
-    
-    if ((c == 'e') || (c == 'E')) {
-        return false;
-    }
-    
-    cin.clear();
-    return true;
+	cout << "Press any key + ENTER to continue or `e/E + ENTER` for exit the downloader : " << endl;
+	char c;
+	cin >> c;
+
+	if ((c == 'e') || (c == 'E')) {
+		return false;
+	}
+
+	cin.clear();
+	return true;
 }

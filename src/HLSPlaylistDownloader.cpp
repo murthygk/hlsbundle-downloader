@@ -45,6 +45,7 @@ bool HLSPlaylistDownloader::downloadItem(const char* url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlCallBack);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
             result = curl_easy_perform(curl);
             curl_easy_cleanup(curl);
             
@@ -103,6 +104,8 @@ void HLSPlaylistDownloader::downloadIndividualPlaylist(string baseUrlPath, strin
                 m_url = baseUrlPath + playlistName + "/" + *sequence;
                 // sequence files are binary hence open input file in binary mode
                 m_hlsstream = ofstream(localDownloadSequenceName, ios::out | ios::app | ios::binary);
+                // thread th(&HLSPlaylistDownloader::downloadItem, this, m_url.c_str());
+                //th.join();
                 downloadItem(m_url.c_str());
                 cout << "." << flush;
             }

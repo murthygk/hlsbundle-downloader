@@ -16,8 +16,9 @@ class HLSPlaylistUtilities {
     public:
        static vector<string> buildList(string infile);
        static vector<string> tokenize(string path, char delimiter);
-       static bool createDirectory(string path);
+       static unsigned int createDirectory(string path);
        static bool fetchAndvalidateUserInput(string *destinationPath, HLSPlaylistInfo *playlistInfo);
+	   static void replaceString(string & originalString, const string & from, const string & to);
 };
 
 #endif /* HLSPlaylistUtilities_hpp */

@@ -51,7 +51,7 @@ int main(void)
         }
     }
     
-    cout << endl << "                -----***** Playlist Download COMPLETED *****-----               " << endl;
+    cout << endl << "                -----***** Playlist Download COMPLETED *****-----               " << endl << flush;
     
     playlistInfo = NULL;
     hlsDownloader = NULL;
